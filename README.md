@@ -11,15 +11,13 @@ To start the interpreter, follow these steps:
 1. Clone the repository to your local machine using the following command:
 
 ```
-shellCopy code
-$ git clone https://github.com/ahmedalxet/airbnb-clone.git
+$ git clone https://github.com/ahmedalxet/AirBnB_clone.git
 
 ```
 
 2. Navigate to the repository's directory:
 
 ```
-shellCopy code
-$ cd airbnb-clone
+$ cd AirBnB_clone
 
 ```
