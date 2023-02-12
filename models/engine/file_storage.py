@@ -1,5 +1,6 @@
 import json
 from models.base_model import BaseModel
+from models.user import User
 
 class FileStorage:
     __file_path = "file.json"
@@ -24,7 +25,11 @@ class FileStorage:
         """Deserialize the JSON file to __objects (only if the JSON file (__file_path) exists ; otherwise, do nothing. If the file doesn’t exist, no exception should be raised)"""
         try:
             with open(FileStorage.__file_path, mode='r', encoding='utf-8') as file:
-                FileStorage.__objects = {key: BaseModel(**value) for key, value in json.load(file).items()}
+                for key, value in json.load(file).items():
+                    if value["__class__"] == "BaseModel":
+                        FileStorage.__objects[key] = BaseModel(**value)
+                    elif value["__class__"] == "User":
+                        FileStorage.__objects[key] = User(**value)
         except FileNotFoundError:
             pass
 

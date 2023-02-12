@@ -4,6 +4,8 @@ import sys
 import models
 import re
 from models.base_model import BaseModel
+from models.user import User
+from models.engine.file_storage import FileStorage
 
 class HBNBCommand(cmd.Cmd):
    
@@ -29,50 +31,41 @@ class HBNBCommand(cmd.Cmd):
         """Quit command to exit the program"""
         return True
 
+
     def do_EOF(self, args):
         """EOF command to exit the program"""
         return True
 
-    def do_create(self, line):
-        if not line:
+
+    def do_create(self, argv):
+        """Create a new instance of BaseModel, saves it (to the JSON file) and prints the id"""
+        if len(argv) == 0:
             print("** class name missing **")
-            return
-
-        class_name = line.split()[0]
-        if class_name not in self.classes:
-            print("** class doesn't exist **")
-            return
-
-        new_instance = self.classes[class_name]()
-        new_instance.save()
-        print(new_instance.id)
+        else:
+            arg_list = self.check_args(argv)
+            if arg_list[0] == "BaseModel":
+                new_obj = BaseModel()
+            elif arg_list[0] == "User":
+                new_obj = User()
+            new_obj.save()
+            print(new_obj.id)
 
 
     def do_show(self, argv):
-        """Prints the string representation of an instance based
-        on the class name and id"""
-        if not argv:
-            print("** class name missing **")
-            return
+        """Shows an instance based on the class name and id."""
+        arg_list = self.check_args(argv)
+        if arg_list:
+            if len(arg_list) == 1:
+                print("** class name missing **")
+            else:
+                key = "{}.{}".format(*arg_list)
+                if key in self.storage.all():
+                    print(self.storage.all()[key])
+                else:
+                    print("** no instance found **")
 
-        arg_list = argv.split()
-        if len(arg_list) < 2:
-            print("** instance id missing **")
-            return
 
-        class_name, instance_id = arg_list[0], arg_list[1]
-        if class_name not in self.classes:
-            print("** class doesn't exist **")
-            return
-
-        all_instances = models.storage.all()
-        key = class_name + "." + instance_id
-        if key not in all_instances:
-            print("** no instance found **")
-            return
-        print(all_instances[key])
-
-    
+   
     def do_destroy(self, argv):
         """Delete a class instance based on the name and given id."""
         arg_list = self.check_args(argv)
@@ -80,7 +73,9 @@ class HBNBCommand(cmd.Cmd):
             if len(arg_list) == 1:
                 print("** instance id missing **")
             else:
-                key = "{}.{}".format(*arg_list)
+                class_name = arg_list[0]
+                obj_id = arg_list[1]
+                key = "{}.{}".format(class_name, obj_id)
                 if key in self.storage.all():
                     del self.storage.all()[key]
                     self.storage.save()
@@ -89,42 +84,45 @@ class HBNBCommand(cmd.Cmd):
 
 
     
-    def do_all(self, args):
-        """Prints all string representation of all instances based on the class name"""
-        all_instances = models.storage.all()
-        if args:
-            if args not in self.classes:
-                print("** class doesn't exist **")
-                return
-            class_name = args
-            instances = [str(val) for key, val in all_instances.items() if key.startswith(class_name + ".")]
-        else:
-            instances = [str(val) for key, val in all_instances.items()]
-        print(instances)
-
-    def do_update(self, line):
-        args = self.check_args(line)
-        if len(args) < 4:
-            print("** instance id, attribute name and value missing **")
-        else:
-            class_name = args[0]
-            instance_id = args[1]
-            attribute_name = args[2]
-            attribute_value = args[3]
-
-            instance = self.storage.all().get(f"{class_name}.{instance_id}")
-            if not instance:
-                print("** no instance found **")
+    def do_all(self, argv):
+        """Prints all string representation of all instances based or not on the class name."""
+        arg_list = self.check_args(argv)
+        if len(arg_list) == 0:
+            for key, value in self.storage.all().items():
+                print(value)
+        elif len(arg_list) == 1:
+            if arg_list[0] in ["BaseModel", "User"]:
+                for key, value in self.storage.all().items():
+                    if type(value).__name__ == arg_list[0]:
+                        print(value)
             else:
-                if not hasattr(instance, attribute_name):
-                    setattr(instance, attribute_name, attribute_value)
+                print("** class doesn't exist **")
+                
+        else:
+            print("** class name missing **")
+
+
+    def do_update(self, argv):
+        """Updates an instance based on the class name and id by adding or updating attribute (save the change into the JSON file)."""
+        arg_list = self.check_args(argv)
+        if len(arg_list) == 0:
+            print("** class name missing **")
+        elif len(arg_list) == 1:
+            print("** instance id missing **")
+        elif len(arg_list) == 2:
+            print("** attribute name missing **")
+        elif len(arg_list) == 3:
+            print("** value missing **")
+        else:
+            key = "{}.{}".format(arg_list[0], arg_list[1])
+            if key in self.storage.all():
+                if hasattr(self.storage.all()[key], arg_list[2]):
+                    setattr(self.storage.all()[key], arg_list[2], arg_list[3])
+                    self.storage.all()[key].save()
                 else:
-                    attr_type = type(getattr(instance, attribute_name))
-                    setattr(instance, attribute_name, attr_type(attribute_value))
-                self.storage.save()
-
-
-
+                    print("** no attribute found **")
+            else:
+                print("** no instance found **")
 
 
 if __name__ == '__main__':
