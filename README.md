@@ -23,3 +23,44 @@ $ git clone https://github.com/ahmedalxet/AirBnB_clone.git
 $ cd AirBnB_clone
 
 ```
+
+### **Using the Interpreter**
+
+The interpreter provides several commands that can be used to perform various operations. A list of available commands can be displayed by typing **`help`**.
+
+Here are some examples of how to use the interpreter:
+
+1. Create a new user:
+
+```
+(hbnb) create User
+
+```
+
+2. Show an instance of a user:
+
+```
+(hbnb) show User <user_id>
+
+```
+
+3. Create a new place:
+
+```
+(hbnb) create Place
+
+```
+
+4. Show an instance of a place:
+
+```
+(hbnb) show Place <place_id>
+
+```
+
+5. Quit the interpreter:
+
+```
+(hbnb) quit
+
+```
